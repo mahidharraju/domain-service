@@ -98,7 +98,7 @@ public class DomainService {
     HttpEntity<?> entity = new HttpEntity<>(headers);
     ResponseEntity<DomainsResponseDTO> response = restTemplate.exchange(trustServiceEndpoint + "departments/{deptId}/trustGroups",
         HttpMethod.GET, entity, DomainsResponseDTO.class, deptId);
-    return response!=null && response.hasBody() ? Optional.of(response.getBody()) : Optional.empty();
+    return response.hasBody() ? Optional.of(response.getBody()) : Optional.empty();
   }
 
 

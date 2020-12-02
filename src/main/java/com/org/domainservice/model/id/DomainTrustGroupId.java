@@ -52,4 +52,9 @@ public class DomainTrustGroupId implements Serializable {
         && deptId == ((DomainTrustGroupId) o).getDeptId()
         && orgCollabId == ((DomainTrustGroupId) o).getOrgCollabId());
   }
+
+  @Override
+  public int hashCode() {
+    return id.hashCode()+domainId.hashCode()+deptId.hashCode()+orgCollabId.hashCode();
+  }
 }
