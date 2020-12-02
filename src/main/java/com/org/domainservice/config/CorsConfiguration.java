@@ -1,22 +1,18 @@
 package com.org.domainservice.config;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-public class CorsConfiguration {
+public class CorsConfiguration implements WebMvcConfigurer {
 
-  @Value("${allowedOrigins}")
-  private static String allowedOrigins;
+  @Autowired
+  private Environment env;
 
-  @Bean
-  public WebMvcConfigurer corsConfigurer() {
-    return new WebMvcConfigurer() {
-      @Override
-      public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**").allowedOrigins(allowedOrigins);
-      }
-    };
+  @Override
+  public void addCorsMappings(final CorsRegistry registry) {
+    registry.addMapping("/**")
+        .allowedOrigins(env.getProperty("service.security.allowedOrigins"));
   }
 }

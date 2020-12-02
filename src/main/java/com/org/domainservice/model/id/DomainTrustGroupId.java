@@ -1,26 +1,25 @@
 package com.org.domainservice.model.id;
 
 import java.io.Serializable;
-import java.util.UUID;
 
 public class DomainTrustGroupId implements Serializable {
 
   private static final long serialVersionUID = 6878190285512355786L;
 
-  private UUID id;
-  private UUID domainId;
-  private UUID deptId;
-  private UUID orgCollabId;
+  private Long id;
+  private Long domainId;
+  private Long deptId;
+  private Long orgCollabId;
 
   public DomainTrustGroupId() {
     super();
   }
 
   public DomainTrustGroupId(
-      final UUID id,
-      final UUID domainId,
-      final UUID deptId,
-      final UUID orgCollabId) {
+      final Long id,
+      final Long domainId,
+      final Long deptId,
+      final Long orgCollabId) {
     super();
     this.id = id;
     this.domainId = domainId;
@@ -28,19 +27,19 @@ public class DomainTrustGroupId implements Serializable {
     this.orgCollabId = orgCollabId;
   }
 
-  public UUID getId() {
+  public Long getId() {
     return id;
   }
 
-  public UUID getDomainId() {
+  public Long getDomainId() {
     return domainId;
   }
 
-  public UUID getDeptId() {
+  public Long getDeptId() {
     return deptId;
   }
 
-  public UUID getOrgCollabId() {
+  public Long getOrgCollabId() {
     return orgCollabId;
   }
 

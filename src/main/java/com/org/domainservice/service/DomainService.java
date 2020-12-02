@@ -1,23 +1,23 @@
 package com.org.domainservice.service;
 
-import com.org.domainservice.dto.RoleUpdateRequestDTO;
-import com.org.domainservice.dto.TrustGroupUpdateDTO;
-import com.org.domainservice.repository.DomainTrustGroupRepository;
-import com.org.domainservice.dto.DomainsResponseDTO;
 import com.org.domainservice.dto.DomainDTO;
 import com.org.domainservice.dto.DomainUpdateRequestDTO;
-import com.org.domainservice.exception.DatabaseException;
+import com.org.domainservice.dto.DomainsResponseDTO;
+import com.org.domainservice.dto.RoleUpdateRequestDTO;
+import com.org.domainservice.dto.TrustGroupUpdateDTO;
 import com.org.domainservice.exception.GenericAPIException;
+import com.org.domainservice.exception.NoDataFoundException;
 import com.org.domainservice.model.Domain;
 import com.org.domainservice.model.DomainTrustGroup;
+import com.org.domainservice.repository.DomainTrustGroupRepository;
 import com.org.domainservice.util.Constants;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -31,13 +31,12 @@ import org.springframework.web.client.RestTemplate;
 
 @Service
 @Transactional
-public class DomainService {
+@Qualifier("domainService")
+public class DomainService implements IDomainService {
 
 
-  @Autowired
   private DomainTrustGroupRepository domainTrustGroupRepository;
 
-  @Autowired
   private RestTemplate restTemplate;
 
   @Value("${GOOGLE_DRIVE_SERVICE}")
@@ -45,6 +44,14 @@ public class DomainService {
 
   @Value("${trustService.endpoint}")
   private String trustServiceEndpoint;
+
+  @Value("${domain}")
+  private String domainName;
+
+  public DomainService(DomainTrustGroupRepository domainTrustGroupRepository, RestTemplate restTemplate) {
+    this.domainTrustGroupRepository = domainTrustGroupRepository;
+    this.restTemplate = restTemplate;
+  }
 
   /**
    * This will read departmentID and OrgCollabID from the request and get all the permissions
@@ -57,14 +64,15 @@ public class DomainService {
    */
 
   public DomainsResponseDTO getAllDomainsForADepartment(
-      final UUID deptId,
-      final UUID orgCollabId) {
+      final Long deptId,
+      final Long orgCollabId) {
     DomainsResponseDTO domainData = getDomainData(deptId, orgCollabId).orElseThrow(
         () -> new GenericAPIException("No domains for given department and collaboration platform"));
     List<DomainTrustGroup> domainsTrustGroups =
         domainTrustGroupRepository.findByDeptIdAndOrgCollabId(
             deptId,
-            orgCollabId);
+            orgCollabId)
+            .orElseThrow(() -> new NoDataFoundException("No Trust groups available with given department"));
     List<DomainDTO> domains = buildUIResponse(domainData, domainsTrustGroups);
     domainData.setDomains(domains);
     return domainData;
@@ -73,13 +81,13 @@ public class DomainService {
   private List<DomainDTO> buildUIResponse(
       final DomainsResponseDTO domainData,
       final List<DomainTrustGroup> domainsTrustGroups) {
-    Map<UUID, String> trustGroupMap = domainData.getTrustGroups().stream()
+    Map<Long, String> trustGroupMap = domainData.getTrustGroups().stream()
         .collect(Collectors.toMap(TrustGroupUpdateDTO::getTrustGroupId, TrustGroupUpdateDTO::getName));
     return domainsTrustGroups.stream().map(domainTG -> {
           Domain domain = domainTG.getDomain();
           return DomainDTO
               .builder()
-              .id(domain.getDomainId())
+              .id(domain.getId())
               .domainName(domain.getName())
               .trustScore(domain.getTrustScore())
               .trustGroupId(domainTG.getTgFlavourId())
@@ -91,8 +99,8 @@ public class DomainService {
   }
 
   private Optional<DomainsResponseDTO> getDomainData(
-      final UUID deptId,
-      final UUID orgCollabId) {
+      final Long deptId,
+      final Long orgCollabId) {
     HttpHeaders headers = new HttpHeaders();
     headers.set(Constants.ORG_COLLAB_HEADER, orgCollabId.toString());
     HttpEntity<?> entity = new HttpEntity<>(headers);
@@ -116,60 +124,50 @@ public class DomainService {
 
   public DomainDTO updateDomainTrustGroup(
       final DomainUpdateRequestDTO request,
-      final UUID deptId,
-      final UUID orgCollabId) {
-    try {
-      DomainTrustGroup domain = domainTrustGroupRepository.findByDeptIdAndOrgCollabIdAndDomainId(
-          deptId,
-          orgCollabId,
-          request.getDomainId())
-          .orElseThrow(() ->
-              new GenericAPIException(
-                  "Unable to update the domain now , Seems data is not proper"));
-      UUID trustGroupId = request.getTrustGroupId();
-      String newRole = getRoleForNewTrustGroup(trustGroupId);
-      String domainName = "zemoso.design"; // current functional domain
-      updateDomainWithNewRole(domainName, newRole);
-      domain.setTgFlavourId(trustGroupId);
-      domain = domainTrustGroupRepository.save(domain);
-      return DomainDTO
-          .builder()
-          .id(domain.getId())
-          .domainName(domain.getDomain().getName())
-          .trustScore(domain.getDomain().getTrustScore())
-          .trustGroupId(domain.getTgFlavourId())
-          .relationship(domain.getDomain().getRelationship())
-          .build();
-    } catch (Exception e) {
-      throw new DatabaseException(
-          "Unable to update trust group of a domain" + e.getLocalizedMessage(), e);
-    }
+      final Long deptId,
+      final Long orgCollabId) {
+    DomainTrustGroup domain = domainTrustGroupRepository.findByDeptIdAndOrgCollabIdAndDomainId(
+        deptId,
+        orgCollabId,
+        request.getDomainId())
+        .orElseThrow(() ->
+            new GenericAPIException(
+                "Unable to update the domain now , Seems data is not proper"));
+    Long trustGroupId = request.getTrustGroupId();
+    String newRole = getRoleForNewTrustGroup(trustGroupId);
+    updateDomainWithNewRole(domainName, newRole);
+    domain.setTgFlavourId(trustGroupId);
+    domain = domainTrustGroupRepository.save(domain);
+    return DomainDTO
+        .builder()
+        .id(domain.getId())
+        .domainName(domain.getDomain().getName())
+        .trustScore(domain.getDomain().getTrustScore())
+        .trustGroupId(domain.getTgFlavourId())
+        .relationship(domain.getDomain().getRelationship())
+        .build();
   }
 
   private void updateDomainWithNewRole(
       final String domainName,
       final String newRole) {
-    try {
-      RoleUpdateRequestDTO request = RoleUpdateRequestDTO
-          .builder()
-          .domain(domainName)
-          .role(newRole)
-          .build();
-      URI googleServiceUrl = URI.create(googleAPI);
-      ResponseEntity<String> googleServiceResponse =
-          restTemplate.patchForObject(
-              googleServiceUrl,
-              request,
-              ResponseEntity.class);
-      if (googleServiceResponse!=null && !googleServiceResponse.getStatusCode().equals(HttpStatus.OK)) {
-        throw new GenericAPIException("Unable to update domain with new Role");
-      }
-    } catch (Exception e) {
-      throw new GenericAPIException("Unable to update domain with new Role", e);
+    RoleUpdateRequestDTO request = RoleUpdateRequestDTO
+        .builder()
+        .domain(domainName)
+        .role(newRole)
+        .build();
+    URI googleServiceUrl = URI.create(googleAPI);
+    ResponseEntity<String> googleServiceResponse =
+        restTemplate.patchForObject(
+            googleServiceUrl,
+            request,
+            ResponseEntity.class);
+    if (googleServiceResponse != null && !googleServiceResponse.getStatusCode().equals(HttpStatus.OK)) {
+      throw new GenericAPIException("Unable to update domain with new Role");
     }
   }
 
-  private String getRoleForNewTrustGroup(final UUID trustGroupId) {
+  private String getRoleForNewTrustGroup(final Long trustGroupId) {
     ResponseEntity<String> response = restTemplate.getForEntity(
         trustServiceEndpoint + "trustGroups/{tgFlavourId}/role",
         String.class,

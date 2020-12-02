@@ -3,19 +3,21 @@ package com.org.domainservice.dto;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Setter
+@Getter
 public class DomainDTO {
 
-  private UUID id;
+  private Long id;
   private String domainName;
   private int trustScore;
-  private UUID trustGroupId;
+  private Long trustGroupId;
   private String trustGroupName;
   private String relationship;
 }

@@ -2,13 +2,14 @@ package com.org.domainservice.dto;
 
 import java.util.List;
 import java.util.UUID;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Setter
+@Getter
 public class DomainsResponseDTO {
 
-
-  private UUID id;
+  private Long id;
   private String title;
   private List<TrustGroupUpdateDTO> trustGroups;
   private List<DomainDTO> domains;

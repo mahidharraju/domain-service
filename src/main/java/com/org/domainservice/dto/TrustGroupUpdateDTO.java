@@ -1,18 +1,19 @@
 package com.org.domainservice.dto;
 
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Getter
+@Setter
 public class TrustGroupUpdateDTO {
 
-  private UUID trustGroupId;
+  private Long trustGroupId;
   private String name;
   private Boolean canViewSharedFilesAndFolders;
   private Boolean canCommentOnSharedFilesAndFolders;

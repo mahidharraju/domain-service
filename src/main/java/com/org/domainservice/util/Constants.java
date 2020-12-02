@@ -1,7 +1,7 @@
 package com.org.domainservice.util;
 
 public class Constants {
-  
+
   private Constants() {
   }
 

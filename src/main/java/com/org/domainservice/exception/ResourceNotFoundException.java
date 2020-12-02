@@ -1,9 +1,7 @@
 package com.org.domainservice.exception;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
 
-@Data
 @AllArgsConstructor
 public class ResourceNotFoundException extends RuntimeException {
 
