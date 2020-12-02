@@ -48,7 +48,9 @@ public class DomainService implements IDomainService {
   @Value("${domain}")
   private String domainName;
 
-  public DomainService(DomainTrustGroupRepository domainTrustGroupRepository, RestTemplate restTemplate) {
+  public DomainService(
+      DomainTrustGroupRepository domainTrustGroupRepository,
+      RestTemplate restTemplate) {
     this.domainTrustGroupRepository = domainTrustGroupRepository;
     this.restTemplate = restTemplate;
   }
@@ -67,12 +69,15 @@ public class DomainService implements IDomainService {
       final Long deptId,
       final Long orgCollabId) {
     DomainsResponseDTO domainData = getDomainData(deptId, orgCollabId).orElseThrow(
-        () -> new GenericAPIException("No domains for given department and collaboration platform"));
+        () -> new GenericAPIException(
+            "No domains for given department and collaboration platform"));
     List<DomainTrustGroup> domainsTrustGroups =
         domainTrustGroupRepository.findByDeptIdAndOrgCollabId(
             deptId,
             orgCollabId)
-            .orElseThrow(() -> new NoDataFoundException("No Trust groups available with given department"));
+            .orElseThrow(
+                () -> new NoDataFoundException(
+                    "No Trust groups available with given department"));
     List<DomainDTO> domains = buildUIResponse(domainData, domainsTrustGroups);
     domainData.setDomains(domains);
     return domainData;
@@ -82,7 +87,9 @@ public class DomainService implements IDomainService {
       final DomainsResponseDTO domainData,
       final List<DomainTrustGroup> domainsTrustGroups) {
     Map<Long, String> trustGroupMap = domainData.getTrustGroups().stream()
-        .collect(Collectors.toMap(TrustGroupUpdateDTO::getTrustGroupId, TrustGroupUpdateDTO::getName));
+        .collect(Collectors.toMap(
+            TrustGroupUpdateDTO::getTrustGroupId,
+            TrustGroupUpdateDTO::getName));
     return domainsTrustGroups.stream().map(domainTG -> {
           Domain domain = domainTG.getDomain();
           return DomainDTO
@@ -104,8 +111,12 @@ public class DomainService implements IDomainService {
     HttpHeaders headers = new HttpHeaders();
     headers.set(Constants.ORG_COLLAB_HEADER, orgCollabId.toString());
     HttpEntity<?> entity = new HttpEntity<>(headers);
-    ResponseEntity<DomainsResponseDTO> response = restTemplate.exchange(trustServiceEndpoint + "departments/{deptId}/trustGroups",
-        HttpMethod.GET, entity, DomainsResponseDTO.class, deptId);
+    ResponseEntity<DomainsResponseDTO> response = restTemplate.exchange(
+        trustServiceEndpoint + "departments/{deptId}/trustGroups",
+        HttpMethod.GET,
+        entity,
+        DomainsResponseDTO.class,
+        deptId);
     return response.hasBody() ? Optional.of(response.getBody()) : Optional.empty();
   }
 
@@ -162,7 +173,8 @@ public class DomainService implements IDomainService {
             googleServiceUrl,
             request,
             ResponseEntity.class);
-    if (googleServiceResponse != null && !googleServiceResponse.getStatusCode().equals(HttpStatus.OK)) {
+    if (googleServiceResponse != null
+        && !googleServiceResponse.getStatusCode().equals(HttpStatus.OK)) {
       throw new GenericAPIException("Unable to update domain with new Role");
     }
   }

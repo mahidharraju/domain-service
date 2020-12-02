@@ -9,7 +9,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface DomainTrustGroupRepository extends JpaRepository<DomainTrustGroup, DomainTrustGroupId> {
 
 
-  Optional<List<DomainTrustGroup>> findByDeptIdAndOrgCollabId(Long deptId, Long orgCollabId);
+  Optional<List<DomainTrustGroup>> findByDeptIdAndOrgCollabId(
+      Long deptId,
+      Long orgCollabId);
 
-  Optional<DomainTrustGroup> findByDeptIdAndOrgCollabIdAndDomainId(Long deptId, Long orgCollabId, Long domainId);
+  Optional<DomainTrustGroup> findByDeptIdAndOrgCollabIdAndDomainId(
+      Long deptId,
+      Long orgCollabId,
+      Long domainId);
 }

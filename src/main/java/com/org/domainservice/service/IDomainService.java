@@ -9,6 +9,7 @@ public interface IDomainService {
   DomainsResponseDTO getAllDomainsForADepartment(
       final Long deptId,
       final Long orgCollabId);
+
   DomainDTO updateDomainTrustGroup(
       final DomainUpdateRequestDTO request,
       final Long deptId,

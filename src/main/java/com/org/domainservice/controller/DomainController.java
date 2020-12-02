@@ -12,19 +12,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.WebRequest;
 
 
 @RestController
 public class DomainController {
 
-  private RestTemplate restTemplate;
-
   private IDomainService domainService;
 
-  public DomainController(RestTemplate restTemplate, IDomainService domainService) {
-    this.restTemplate = restTemplate;
+  public DomainController(IDomainService domainService) {
     this.domainService = domainService;
   }
 
