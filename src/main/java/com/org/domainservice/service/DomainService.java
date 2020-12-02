@@ -1,6 +1,7 @@
 package com.org.domainservice.service;
 
 import com.org.domainservice.dto.RoleUpdateRequestDTO;
+import com.org.domainservice.dto.TrustGroupUpdateDTO;
 import com.org.domainservice.repository.DomainTrustGroupRepository;
 import com.org.domainservice.dto.DomainsResponseDTO;
 import com.org.domainservice.dto.DomainDTO;
@@ -13,6 +14,7 @@ import com.org.domainservice.util.Constants;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,24 +56,25 @@ public class DomainService {
    * @return
    */
 
-  public ResponseEntity<DomainsResponseDTO> getAllDomainsForADepartment(
+  public DomainsResponseDTO getAllDomainsForADepartment(
       final UUID deptId,
       final UUID orgCollabId) {
-    ResponseEntity<DomainsResponseDTO> domainData = getDomainData(deptId, orgCollabId);
+    DomainsResponseDTO domainData = getDomainData(deptId, orgCollabId).orElseThrow(
+        () -> new GenericAPIException("No domains for given department and collaboration platform"));
     List<DomainTrustGroup> domainsTrustGroups =
         domainTrustGroupRepository.findByDeptIdAndOrgCollabId(
             deptId,
             orgCollabId);
     List<DomainDTO> domains = buildUIResponse(domainData, domainsTrustGroups);
-    domainData.getBody().setDomains(domains);
+    domainData.setDomains(domains);
     return domainData;
   }
 
   private List<DomainDTO> buildUIResponse(
-      final ResponseEntity<DomainsResponseDTO> domainData,
+      final DomainsResponseDTO domainData,
       final List<DomainTrustGroup> domainsTrustGroups) {
-    Map<UUID, String> trustGroupMap = domainData.getBody().getTrustGroups().stream()
-        .collect(Collectors.toMap(tg -> tg.getTrustGroupId(), tg -> tg.getName()));
+    Map<UUID, String> trustGroupMap = domainData.getTrustGroups().stream()
+        .collect(Collectors.toMap(TrustGroupUpdateDTO::getTrustGroupId, TrustGroupUpdateDTO::getName));
     return domainsTrustGroups.stream().map(domainTG -> {
           Domain domain = domainTG.getDomain();
           return DomainDTO
@@ -87,14 +90,15 @@ public class DomainService {
     ).collect(Collectors.toList());
   }
 
-  private ResponseEntity<DomainsResponseDTO> getDomainData(
+  private Optional<DomainsResponseDTO> getDomainData(
       final UUID deptId,
       final UUID orgCollabId) {
     HttpHeaders headers = new HttpHeaders();
     headers.set(Constants.ORG_COLLAB_HEADER, orgCollabId.toString());
     HttpEntity<?> entity = new HttpEntity<>(headers);
-    return restTemplate.exchange(trustServiceEndpoint + "departments/{deptId}/trustGroups",
+    ResponseEntity<DomainsResponseDTO> response = restTemplate.exchange(trustServiceEndpoint + "departments/{deptId}/trustGroups",
         HttpMethod.GET, entity, DomainsResponseDTO.class, deptId);
+    return response!=null && response.hasBody() ? Optional.of(response.getBody()) : Optional.empty();
   }
 
 
@@ -157,7 +161,7 @@ public class DomainService {
               googleServiceUrl,
               request,
               ResponseEntity.class);
-      if (!googleServiceResponse.getStatusCode().equals(HttpStatus.OK)) {
+      if (googleServiceResponse!=null && !googleServiceResponse.getStatusCode().equals(HttpStatus.OK)) {
         throw new GenericAPIException("Unable to update domain with new Role");
       }
     } catch (Exception e) {

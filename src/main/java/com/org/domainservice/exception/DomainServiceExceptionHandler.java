@@ -11,7 +11,7 @@ import com.org.domainservice.util.ControllerResponse;
 public class DomainServiceExceptionHandler {
 
   @ExceptionHandler(ResourceNotFoundException.class)
-  public ResponseEntity<?> handleResourceNotFoundException(
+  public ResponseEntity<ErrorDetails> handleResourceNotFoundException(
       final ResourceNotFoundException exception,
       final WebRequest request) {
     return ControllerResponse.getNotFoundResponseEntity(
@@ -19,7 +19,7 @@ public class DomainServiceExceptionHandler {
   }
 
   @ExceptionHandler(GenericAPIException.class)
-  public ResponseEntity<?> handleGenericAPIException(
+  public ResponseEntity<ErrorDetails> handleGenericAPIException(
       final GenericAPIException exception,
       final WebRequest request) {
     return ControllerResponse.getServerErrorResponseEntity(
@@ -27,7 +27,7 @@ public class DomainServiceExceptionHandler {
   }
 
   @ExceptionHandler(Exception.class)
-  public ResponseEntity<?> handleException(
+  public ResponseEntity<ErrorDetails> handleException(
       final Exception exception,
       final WebRequest request) {
     return ControllerResponse.getServerErrorResponseEntity(

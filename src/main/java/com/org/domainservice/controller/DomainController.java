@@ -36,9 +36,9 @@ public class DomainController {
           .orElseThrow(() -> new GenericAPIException("Department details missing in header"));
       String organizationId = isOrganizationDetailsExistsInHeader(request)
           .orElseThrow(() -> new GenericAPIException("Organization details missing in header"));
-      return domainService.getAllDomainsForADepartment(
+      return ControllerResponse.getOkResponseEntity(domainService.getAllDomainsForADepartment(
           UUID.fromString(departmentId),
-          UUID.fromString(organizationId));
+          UUID.fromString(organizationId)));
     } catch (Exception e) {
       throw new GenericAPIException("Something went Wrong:: " + e.getLocalizedMessage(), e);
     }
